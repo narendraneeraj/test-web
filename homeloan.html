@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home Loan Calculator</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <div class="container mt-5">
+        <h2 class="text-center">Home Loan Calculator</h2>
+
+        <form id="loanForm">
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <label for="principal" class="form-label">Principal Amount</label>
+                    <input type="number" class="form-control" id="principal" required>
+                </div>
+                <div class="col-md-4">
+                    <label for="interestRate" class="form-label">Annual Interest Rate (%)</label>
+                    <input type="number" class="form-control" id="interestRate" step="0.01" required>
+                </div>
+                <div class="col-md-4">
+                    <label for="years" class="form-label">Loan Term (Years)</label>
+                    <input type="number" class="form-control" id="years" required>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary">Calculate</button>
+        </form>
+
+        <div class="mt-5">
+            <canvas id="loanChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS and dependencies -->
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
+
+    <script>
+        document.getElementById('loanForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            const principal = parseFloat(document.getElementById('principal').value);
+            const interestRate = parseFloat(document.getElementById('interestRate').value) / 100;
+            const years = parseInt(document.getElementById('years').value);
+
+            const monthlyInterestRate = interestRate / 12;
+            const numberOfPayments = years * 12;
+            const monthlyPayment = (principal * monthlyInterestRate) / (1 - Math.pow(1 + monthlyInterestRate, -numberOfPayments));
+
+            let remainingPrincipal = principal;
+            const principalData = [];
+            const interestData = [];
+            const labels = [];
+
+            for (let i = 1; i <= years; i++) {
+                const interestPayment = remainingPrincipal * interestRate;
+                const principalPayment = (monthlyPayment * 12) - interestPayment;
+
+                remainingPrincipal -= principalPayment;
+
+                labels.push(`Year ${i}`);
+                principalData.push(Math.max(0, remainingPrincipal));
+                interestData.push(interestPayment);
+            }
+
+            const ctx = document.getElementById('loanChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Principal Amount Remaining',
+                        data: principalData,
+                        borderColor: 'rgb(75, 192, 192)',
+                        fill: false
+                    }, {
+                        label: 'Interest Paid',
+                        data: interestData,
+                        borderColor: 'rgb(255, 99, 132)',
+                        fill: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: {
+                            display: true,
+                            title: {
+                                display: true,
+                                text: 'Year'
+                            }
+                        },
+                        y: {
+                            display: true,
+                            title: {
+                                display: true,
+                                text: 'Amount ($)'
+                            }
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>
